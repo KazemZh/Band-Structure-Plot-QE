@@ -5,10 +5,8 @@ import matplotlib.transforms as transforms
 from matplotlib.ticker import AutoMinorLocator
 import matplotlib.pyplot as plt
 
-# Set fonts size
 matplotlib.rc('font', size=11)
 
-# Load the input files
 fname = './bands.dat.gnu'
 fstring = './bands.out'
 scfname = './scf.out'
@@ -19,8 +17,6 @@ bands = [[]]
 # Read first the fermi energy to directly subtract when you are reading the
 # bands
 
-# You can remove the second loop and avoid using "file" as variable because it
-# is reserved keyword in pyhton
 fermi = 0  # In case it is not found in file
 with open(scfname, 'r') as _file:
     for line in _file:
@@ -29,7 +25,6 @@ with open(scfname, 'r') as _file:
             break
 
 with open(fname) as _file:
-    # Skip the comment
     next(_file)
     for line in _file:
         if not line.strip():
@@ -42,63 +37,47 @@ with open(fname) as _file:
         bands[-1].append(line_parse[1] - fermi)
 
 
-# Now you can iterate to represent each band
 fig, axes = plt.subplots(figsize=(10, 6))
 for energy, band in zip(energies, bands):
     axes.plot(energy, band, 'k')
 
-# load the high symetry points coordinations
 high_symetry = []
 with open(fstring, 'r') as file:
     for line in file:
         if "high-symmetry" in line:
             high_symetry.append(float(line.split()[-1]))
 
-# Avoid using the same variable name inside loop and outside although you know
-# what you ar doing. Print the number of high_symetry points found.
 point_labels = input(
     f"Enter the symbols of high symtery points ({len(high_symetry)} found): ").split()
 point_labels = [i if i != 'G' else r'$\Gamma$' for i in point_labels]
 
 
-# the x coords of this transformation are data, and the y coord are axes
 trans = transforms.blended_transform_factory(axes.transData, axes.transAxes)
 
-# Avoid using range(len()) in loops and use more explicit variable names
-# add the high symetry points box
 for point, point_label in zip(high_symetry, point_labels):
     axes.text(point, -0.05, point_label, transform=trans,
               horizontalalignment='center')
 
-# add vetical lines at high symetry points
 for point in high_symetry[1:-1]:
     axes.vlines(point, 0, 1, colors='k', transform=trans)
 
-# add horizontal lines at high symetry points
 axes.hlines(0, high_symetry[0], high_symetry[-1],
             linestyle='dashed', colors='k')
 
-# X and Y limits
 axes.set_xlim((high_symetry[0], high_symetry[-1]))
 Ei = float(input("Enter the lower limit of enery interval:"))
 Ef = float(input("Enter the upper limit of enery interval:"))
 axes.set_ylim((Ei, Ef))
 
-# add y axis minor ticks
 axes.yaxis.set_minor_locator(AutoMinorLocator(2))
 
-
-# Hide x axis values
 axes.tick_params(axis='x', which='both', bottom=False, top=False,
                  labelbottom=False)
 
-# Add major and minor ticks to top and right
 axes.tick_params(axis='y', which='both', direction='in', left=True,
                  right=True, labelbottom=False)
 
-# Labels
 axes.set_ylabel('Energy (eV)')
 
-# Uncomment de next line to save the figure
 plt.savefig('band.pdf', bbox_inches='tight', transparent=True)
 plt.show()
